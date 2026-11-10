@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,maximum-scale=1">
+<meta name="theme-color" content="#050912">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Cyber Strike - 3D first-person team deathmatch">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<title>Cyber Strike</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050912;color:#eaf7ff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;touch-action:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;pointer-events:none;z-index:3}
+#mini{position:fixed;left:max(10px,env(safe-area-inset-left));top:10px;width:132px;height:132px;border:2px solid #2b5d86;border-radius:12px;background:#06101dcc;z-index:3;pointer-events:none}
+#score{left:50%;top:8px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-weight:900}
+#score .tm{padding:6px 14px;border-radius:10px;font-size:22px;min-width:58px;text-align:center}
+#sBlue{background:#0d3d78cc;border:1px solid #3fa0ff;color:#bfe1ff}
+#sRed{background:#7a1426cc;border:1px solid #ff5d73;color:#ffc5ce}
+#timer{font-size:18px;background:#06101dcc;padding:6px 12px;border-radius:10px;border:1px solid #28506f}
+#feed{right:max(10px,env(safe-area-inset-right));top:10px;width:260px;text-align:right;font-size:13px;font-weight:700}
+#feed div{margin:3px 0;padding:3px 8px;background:#06101daa;border-radius:8px;display:inline-block;clear:both;float:right}
+.b{color:#6fc0ff}.r{color:#ff7a8b}
+#cross{left:50%;top:50%;width:0;height:0}
+#cross i{position:absolute;background:#e9fbff;opacity:.9}
+#cross .h{width:10px;height:2px;top:-1px}#cross .v{width:2px;height:10px;left:-1px}
+#hit{left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;opacity:0;transition:opacity .12s}
+#hit:before,#hit:after{content:"";position:absolute;left:12px;top:-3px;width:2px;height:32px;background:#fff;transform:rotate(45deg)}
+#hit:after{transform:rotate(-45deg)}
+#hit.hs:before,#hit.hs:after{background:#ff4455}
+#dmg{inset:0;background:radial-gradient(ellipse at center,#0000 45%,#ff1a2eaa 100%);opacity:0;transition:opacity .25s}
+#hd{left:50%;top:50%;width:0;height:0;opacity:0}
+#hd i{position:absolute;left:-34px;top:-150px;width:68px;height:12px;border-radius:8px;background:linear-gradient(90deg,#0000,#ff2a3d,#0000)}
+#bars{left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:14px;align-items:flex-end}
+#hpbox{width:230px;height:22px;background:#06101dcc;border:1px solid #2b5d86;border-radius:11px;overflow:hidden;position:relative}
+#hpfill{height:100%;width:100%;background:linear-gradient(90deg,#10c98a,#7bf5b8);transition:width .15s}
+#hptxt{position:absolute;inset:0;text-align:center;font-size:13px;line-height:22px;font-weight:900}
+#ammo{font-size:26px;font-weight:900;text-shadow:0 0 10px #000}#ammo small{font-size:14px;color:#9bb4ca}
+#msg{left:50%;top:22%;transform:translateX(-50%);font-size:30px;font-weight:950;text-shadow:0 0 14px #000;text-align:center;opacity:0;transition:opacity .2s;white-space:nowrap}
+#big{left:50%;top:38%;transform:translateX(-50%);font-size:84px;font-weight:950;color:#7be8ff;text-shadow:0 0 26px #00baff;opacity:0}
+#spawn{left:50%;top:60%;transform:translateX(-50%);font-size:18px;font-weight:800;text-align:center;opacity:0}
+#joyzone,#lookzone{position:fixed;z-index:2;touch-action:none}
+#joyzone{left:0;top:22%;bottom:0;width:40%}
+#lookzone{left:40%;top:0;right:0;bottom:0}
+#joybase{position:fixed;width:120px;height:120px;border-radius:50%;background:#0c2135aa;border:2px solid #416887;z-index:3;pointer-events:none;display:none}
+#joyknob{position:absolute;left:36px;top:36px;width:48px;height:48px;border-radius:50%;background:#5bdcffcc}
+#btns{position:fixed;right:max(0px,env(safe-area-inset-right));bottom:max(0px,env(safe-area-inset-bottom));width:300px;height:260px;z-index:4;pointer-events:none}
+.tb{position:absolute;border-radius:50%;background:#123b58dd;border:2px solid #6ae4ff;color:#c8f5ff;font-weight:900;font-size:12px;display:grid;place-items:center;pointer-events:auto;touch-action:none}
+#bFire{right:26px;bottom:30px;width:96px;height:96px;font-size:15px}
+#bAim{right:140px;bottom:46px;width:64px;height:64px}
+#bJump{right:36px;bottom:150px;width:64px;height:64px}
+#bReload{right:120px;bottom:130px;width:56px;height:56px}
+.tb.on{background:#16a9e8dd;color:#001}
+#pauseBtn{position:fixed;right:max(10px,env(safe-area-inset-right));top:max(150px,env(safe-area-inset-top));z-index:4;width:40px;height:34px;border-radius:10px;background:#06101dcc;border:1px solid #28506f;color:#cfeaff;font-weight:900;display:grid;place-items:center}
+.overlay{position:fixed;inset:0;display:grid;place-items:center;background:#02060ce6;z-index:10;backdrop-filter:blur(6px)}
+.card{width:min(94vw,520px);max-height:96vh;overflow:auto;padding:22px;border:1px solid #315779;border-radius:20px;background:#081426f2;text-align:center}
+.logo{font-size:clamp(34px,8vw,56px);font-weight:950;color:#73e5ff;text-shadow:0 0 26px #00baff66;letter-spacing:1px}
+.sub{color:#9bb4ca;margin:2px 0 14px;font-size:14px}
+.field{width:100%;padding:12px;border-radius:12px;font-size:16px;background:#061018;color:#fff;border:1px solid #315779;margin:4px 0 10px;user-select:text;-webkit-user-select:text}
+.row{display:flex;gap:8px;margin:6px 0}
+.opt{flex:1;padding:11px 6px;border-radius:12px;border:1px solid #315779;background:#132a44;color:#bfeaff;font-weight:800;font-size:14px}
+.opt.sel{background:#16a9e8;color:#001118;border-color:#7be8ff}
+.btn{width:100%;padding:14px;border:0;border-radius:14px;background:#16a9e8;color:#001118;font-weight:950;font-size:17px;margin-top:10px}
+.btn.alt{background:#1d3550;color:#bfeaff}
+.help{font-size:12px;color:#8ea8bf;line-height:1.5;margin-top:12px;text-align:left}
+#status{min-height:18px;font-size:13px;color:#9bb4ca;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}th,td{padding:5px 6px;text-align:center}td:nth-child(2),th:nth-child(2){text-align:left}tr.me{background:#16365a}
+#rotate{display:none;position:fixed;inset:0;z-index:30;background:#02050c;color:#fff;place-items:center;text-align:center;font-weight:900;font-size:20px;padding:30px}
+@media (orientation:portrait) and (pointer:coarse){#rotate{display:grid}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="mini" width="132" height="132"></canvas>
+<div class="hud" id="score"><div class="tm" id="sBlue">0</div><div id="timer">5:00</div><div class="tm" id="sRed">0</div></div>
+<div class="hud" id="feed"></div>
+<div class="hud" id="cross"><i class="h" style="left:-16px"></i><i class="h" style="left:6px"></i><i class="v" style="top:-16px"></i><i class="v" style="top:6px"></i></div>
+<div class="hud" id="hit"></div>
+<div class="hud" id="dmg"></div>
+<div class="hud" id="hd"><i></i></div>
+<div class="hud" id="bars"><div id="hpbox"><div id="hpfill"></div><div id="hptxt">100</div></div><div id="ammo">30<small> / 30</small></div></div>
+<div class="hud" id="msg"></div>
+<div class="hud" id="big"></div>
+<div class="hud" id="spawn"></div>
+<div id="joyzone"></div><div id="lookzone"></div>
+<div id="joybase"><div id="joyknob"></div></div>
+<div id="btns">
+<div class="tb" id="bFire">FIRE</div><div class="tb" id="bAim">AIM</div><div class="tb" id="bJump">JUMP</div><div class="tb" id="bReload">R</div>
+</div>
+<div id="pauseBtn">II</div>
+<div class="overlay" id="menu"><div class="card">
+<div class="logo">CYBER STRIKE</div>
+<div class="sub">3D first-person team deathmatch &middot; 5 vs 5 &middot; online rooms &middot; full city map</div>
+<input id="name" class="field" maxlength="14" placeholder="Your name" value="Player">
+<div class="row" id="diffRow"><button class="opt" data-d="easy">Easy</button><button class="opt" data-d="normal">Normal</button><button class="opt" data-d="hard">Hard</button></div>
+<div class="row" id="qualRow"><button class="opt" data-q="low">Smooth</button><button class="opt" data-q="high">Sharp</button></div>
+<div id="mainBtns"><button class="btn" id="startBtn">PLAY OFFLINE vs BOTS</button>
+<button class="btn alt" id="hostBtn">CREATE ONLINE ROOM</button>
+<div class="row" style="align-items:center"><input id="roomIn" class="field" maxlength="6" placeholder="Room code" style="margin:0;text-transform:uppercase"><button class="opt" id="joinBtn" style="flex:0 0 42%">JOIN ROOM</button></div></div>
+<div id="lobby" style="display:none"><div class="sub" id="lobbyTxt"></div><div id="roomCode" class="logo" style="font-size:42px;letter-spacing:6px"></div><button class="btn" id="goBtn">START MATCH</button><button class="btn alt" id="leaveBtn">LEAVE ROOM</button></div>
+<div id="status"></div>
+<div class="help" id="helpPC"><b>PC:</b> WASD move &middot; mouse aim &middot; click fire &middot; right-click aim &middot; Shift sprint &middot; Space jump &middot; R reload &middot; Esc pause</div>
+<div class="help" id="helpTouch"><b>Phone:</b> left thumb moves, right thumb looks. FIRE, AIM, JUMP and R are on the right. Play in landscape.</div>
+<div class="help">Offline you play for <b class="b">BLUE</b>. Online, teams are picked for you. First team to 30 kills, or the most kills after 5 minutes, wins.</div>
+</div></div>
+<div class="overlay" id="pause" style="display:none"><div class="card"><div class="logo" style="font-size:36px">PAUSED</div><button class="btn" id="resumeBtn">RESUME</button><button class="btn" id="quitBtn" style="background:#1d3550;color:#bfeaff">QUIT TO MENU</button></div></div>
+<div class="overlay" id="end" style="display:none"><div class="card"><div class="logo" id="endTitle" style="font-size:40px">VICTORY</div><div class="sub" id="endSub"></div><div id="endTable"></div><button class="btn" id="againBtn">PLAY AGAIN</button></div></div>
+<div id="rotate">Rotate your phone to landscape<br>to play Cyber Strike</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
