@@ -70,6 +70,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050912;col
 table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}th,td{padding:5px 6px;text-align:center}td:nth-child(2),th:nth-child(2){text-align:left}tr.me{background:#16365a}
 #rotate{display:none;position:fixed;inset:0;z-index:30;background:#02050c;color:#fff;place-items:center;text-align:center;font-weight:900;font-size:20px;padding:30px}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:grid}}
+
+.btn svg{width:30px;height:30px;vertical-align:middle}.opt svg{width:100%;max-width:64px;height:26px;display:block;margin:auto}
+.tb svg{width:58%;height:58%}#pauseBtn svg{width:70%;height:70%}
+#wbar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);display:flex;gap:6px;z-index:4}
+.wb{width:48px;height:34px;border-radius:9px;background:#06101dcc;border:1px solid #28506f;color:#9bb4ca;display:grid;place-items:center;touch-action:none}
+.wb.on{border-color:#7be8ff;color:#7be8ff;background:#123b58dd}.wb svg{width:36px;height:16px}
+#scope{inset:0;opacity:0;z-index:2;background:radial-gradient(circle at 50% 50%,#0000 0,#0000 30vh,#000 30.4vh)}
+#scope:before{content:"";position:absolute;left:50%;top:50%;width:60vh;height:2px;margin-left:-30vh;background:#000}
+#scope:after{content:"";position:absolute;left:50%;top:50%;height:60vh;width:2px;margin-top:-30vh;background:#000}
+#bSwap{right:195px;bottom:112px;width:52px;height:52px}
 </style>
 </head>
 <body>
@@ -88,28 +98,28 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}th,td{pa
 <div id="joyzone"></div><div id="lookzone"></div>
 <div id="joybase"><div id="joyknob"></div></div>
 <div id="btns">
-<div class="tb" id="bFire">FIRE</div><div class="tb" id="bAim">AIM</div><div class="tb" id="bJump">JUMP</div><div class="tb" id="bReload">R</div>
+<div class="tb" id="bFire"></div><div class="tb" id="bAim"></div><div class="tb" id="bJump"></div><div class="tb" id="bReload"></div><div class="tb" id="bSwap"></div>
 </div>
-<div id="pauseBtn">II</div>
+<div id="pauseBtn"></div>
 <div class="overlay" id="menu"><div class="card">
 <div class="logo">CYBER STRIKE</div>
 <div class="sub">3D first-person team deathmatch &middot; 5 vs 5 &middot; online rooms &middot; full city map</div>
 <input id="name" class="field" maxlength="14" placeholder="Your name" value="Player">
-<div class="row" id="diffRow"><button class="opt" data-d="easy">Easy</button><button class="opt" data-d="normal">Normal</button><button class="opt" data-d="hard">Hard</button></div>
-<div class="row" id="qualRow"><button class="opt" data-q="low">Smooth</button><button class="opt" data-q="high">Sharp</button></div>
-<div id="mainBtns"><button class="btn" id="startBtn">PLAY OFFLINE vs BOTS</button>
-<button class="btn alt" id="hostBtn">CREATE ONLINE ROOM</button>
-<div class="row" style="align-items:center"><input id="roomIn" class="field" maxlength="6" placeholder="Room code" style="margin:0;text-transform:uppercase"><button class="opt" id="joinBtn" style="flex:0 0 42%">JOIN ROOM</button></div></div>
-<div id="lobby" style="display:none"><div class="sub" id="lobbyTxt"></div><div id="roomCode" class="logo" style="font-size:42px;letter-spacing:6px"></div><button class="btn" id="goBtn">START MATCH</button><button class="btn alt" id="leaveBtn">LEAVE ROOM</button></div>
+<div class="row" id="diffRow"></div>
+<div class="row" id="qualRow"></div><div class="row" id="modeRow"></div><div class="row" id="gunRow"></div>
+<div id="mainBtns"><button class="btn" id="startBtn"></button>
+<button class="btn alt" id="hostBtn"></button>
+<div class="row" style="align-items:center"><input id="roomIn" class="field" maxlength="6" placeholder="Room code" style="margin:0;text-transform:uppercase"><button class="opt" id="joinBtn" style="flex:0 0 42%"></button></div></div>
+<div id="lobby" style="display:none"><div class="sub" id="lobbyTxt"></div><div id="roomCode" class="logo" style="font-size:42px;letter-spacing:6px"></div><button class="btn" id="goBtn"></button><button class="btn alt" id="leaveBtn"></button></div>
 <div id="status"></div>
 <div class="help" id="helpPC"><b>PC:</b> WASD move &middot; mouse aim &middot; click fire &middot; right-click aim &middot; Shift sprint &middot; Space jump &middot; R reload &middot; Esc pause</div>
 <div class="help" id="helpTouch"><b>Phone:</b> left thumb moves, right thumb looks. FIRE, AIM, JUMP and R are on the right. Play in landscape.</div>
 <div class="help">Offline you play for <b class="b">BLUE</b>. Online, teams are picked for you. First team to 30 kills, or the most kills after 5 minutes, wins.</div>
 </div></div>
-<div class="overlay" id="pause" style="display:none"><div class="card"><div class="logo" style="font-size:36px">PAUSED</div><button class="btn" id="resumeBtn">RESUME</button><button class="btn" id="quitBtn" style="background:#1d3550;color:#bfeaff">QUIT TO MENU</button></div></div>
-<div class="overlay" id="end" style="display:none"><div class="card"><div class="logo" id="endTitle" style="font-size:40px">VICTORY</div><div class="sub" id="endSub"></div><div id="endTable"></div><button class="btn" id="againBtn">PLAY AGAIN</button></div></div>
+<div class="overlay" id="pause" style="display:none"><div class="card"><div class="logo" style="font-size:36px">PAUSED</div><button class="btn" id="resumeBtn"></button><button class="btn" id="quitBtn" style="background:#1d3550;color:#bfeaff"></button></div></div>
+<div class="overlay" id="end" style="display:none"><div class="card"><div class="logo" id="endTitle" style="font-size:40px">VICTORY</div><div class="sub" id="endSub"></div><div id="endTable"></div><button class="btn" id="againBtn"></button></div></div>
 <div id="rotate">Rotate your phone to landscape<br>to play Cyber Strike</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<div id="scope" class="hud"></div><div id="wbar"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="game.js"></script>
 </body>
