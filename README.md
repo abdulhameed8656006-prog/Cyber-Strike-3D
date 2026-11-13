@@ -19,6 +19,9 @@ A 3D first-person **team deathmatch** shooter that runs in the browser, in lands
 Turn on GitHub Pages (Settings > Pages > Deploy from a branch > main > / root) and open the link.
 It is also a PWA, so it can be added to the home screen or packaged as an APK with PWABuilder.
 
+## Credits
+3D guns and city buildings are the Kenney Blaster Kit and City Kit (Commercial), CC0 public domain (https://kenney.nl). Licenses are in `models/`.
+
 ## Files
 `index.html` (menu and HUD), `game.js` (the whole game), `sw.js` + `manifest.webmanifest` + icons (PWA).
 
