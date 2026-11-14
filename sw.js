@@ -1,4 +1,4 @@
-const C='cyber-strike-v4';
+const C='cyber-strike-v5';
 const A=['./','./index.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./game.js'];
 self.addEventListener('install',e=>{
  e.waitUntil(caches.open(C).then(c=>Promise.all(A.map(u=>c.add(u).catch(()=>{})))));
