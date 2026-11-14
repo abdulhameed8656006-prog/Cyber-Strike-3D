@@ -7,8 +7,8 @@ var IS_TOUCH=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||('onto
 if(!IS_TOUCH){['joyzone','lookzone','btns','pauseBtn'].forEach(function(i){$(i).style.display='none'});$('helpTouch').style.display='none'}else{$('helpPC').style.display='none'}
 
 /* ---------- constants ---------- */
-var EYE=1.65,R=0.42,ROADS=[-72,-36,0,36,72],RW=6,HALF=100,TEAMSZ=5,SCORE_LIMIT=30,MATCH_TIME=300;
-var MAPH=HALF+8,BASE0=ROADS[4]+RW;
+var EYE=1.65,R=0.42,ROADS=[-36,-18,0,18,36],RW=6,HALF=50,TEAMSZ=5,SCORE_LIMIT=30,MATCH_TIME=300;
+var MAPH=HALF+8,BASE0=ROADS[4]+RW,SNOWMAP=true,MAPS=8,XN=[-14,-7,0,7,14],cliffProx=[];
 var DIFF={
  easy:{react:.75,turn:3.2,spread:.045,dmg:11,rof:4,view:60,lose:2,hold:30,head:.05},
  normal:{react:.5,turn:4.8,spread:.03,dmg:14,rof:5,view:75,lose:3,hold:28,head:.1},
@@ -127,7 +127,19 @@ function layout(x0,x1,z0,z1,kind){
   for(i=0;i<7;i++){var px=sr(x0+4,x1-4),pz=sr(z0+4,z1-4);if(srnd()<.5)crate(px,pz,sr(1.4,2.4),sr(0.8,1.4));else barrier(px,pz,sr(3,6),srnd()<.5)}
   container(cx,cz,srnd()<.5,true);pylon(x0+3,z0+3);pylon(x1-3,z1-3)}
 }
+function snowWorld(){
+ solid(-60,42,60,100,40);solid(-60,-100,60,-42,40);solid(50,-100,60,100,40);solid(-60,-100,-50,100,40);
+ solid(20,-42,33.6,42,22);solid(-33.6,-42,-20,42,22);
+ function pbox(x0,z0,x1,z1,y0,y1,col,em){var m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),new THREE.MeshLambertMaterial({color:col,emissive:em||0x1a2536}));m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);scene.add(m);return m}
+ cliffProx.push(pbox(-60,42,60,100,0,30,0x8fd0ff),pbox(-60,-100,60,-42,0,30,0x8fd0ff));
+ pbox(50,-100,60,100,0,26,0xa8d8ff);pbox(-60,-100,-50,100,0,26,0xa8d8ff);
+ [[20,33.6],[-33.6,-20]].forEach(function(s){
+  pbox(s[0],-42,s[1],42,0,13,0xe9f1fb);pbox(s[0]+1.2,-42,s[1]-1.2,42,13,19,0xc8553f);pbox(s[0]+0.4,-42,s[1]-0.4,42,19,22,0xffffff);
+  for(var k=-36;k<=36;k+=12){pbox(s[0]-0.05,k-1.5,s[1]+0.05,k+1.5,5,8,0xffd98a,0xffd98a)}
+ });
+}
 (function buildMap(){
+ if(SNOWMAP){snowWorld();return}
  var lines=[-HALF].concat(ROADS).concat([HALF]),i,j;
  for(i=0;i<6;i++)for(j=0;j<6;j++){
   var xa=lines[i]+(i===0?0:RW),xb=lines[i+1]-(i===5?0:RW),za=lines[j]+(j===0?0:RW),zb=lines[j+1]-(j===5?0:RW);
@@ -309,12 +321,28 @@ function fetchBin(url,cb,ef){
  var fin=false;function end(g){if(fin)return;fin=true;if(g)cb(g);else if(ef)ef()}
  try{fetch(url).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(bf){var g=null;try{g=parseBin(bf)}catch(e){}end(g)}).catch(function(){end(null)})}catch(e){end(null)}
 }
+/* your Map.glb is the arena: the houses are replaced by light boxes (the originals are 670k triangles), everything else is your model */
+function loadSnowMap(){
+ if(typeof THREE.GLTFLoader==='undefined')return;
+ new THREE.GLTFLoader().load('models/Map.glb',function(gl){
+  var root=gl.scene,hide=[];
+  root.traverse(function(o){
+   if(!o.isMesh)return;
+   var nm=(o.name||'')+' '+((o.parent&&o.parent.name)||'');
+   if(/HOUSE/i.test(nm)){hide.push(o);return}
+   var om=o.material;o.material=new THREE.MeshLambertMaterial({map:(om&&om.map)||null,color:0xe6eefa,emissive:0x202a3a});
+  });
+  hide.forEach(function(o){o.visible=false});
+  root.scale.setScalar(MAPS);root.position.set(0,-0.8,0);scene.add(root);
+  ground.visible=false;for(var i=0;i<cliffProx.length;i++)cliffProx[i].visible=false;
+ },undefined,function(){});
+}
 function loadGunModels(){
  GMOD.forEach(function(gm,id){
   fetchBin('models/guns/'+gm.f+'.bin',function(root){
    var w=new THREE.Group();w.add(root);GUNC[id]=w;
    var q=GUNS[id];q.flash=gm.flash;q.lz=gm.lz;q.ads=gm.ads;
-   vmSwap(me?me.wi:startWi);
+   vmSwap(me?me.wi:startWi);GSTAMP++;
    for(var i=0;i<actors.length;i++){if(actors[i].mesh)actors[i].mesh.gunId=-1}
   });
  });
@@ -322,6 +350,7 @@ function loadGunModels(){
 /* snow map decoration: positions are planned immediately (same for every player), models appear when loaded */
 var SNOWP=[],snowDone=false;
 function planSnow(){
+ if(SNOWMAP)return;
  var s=987654321;function rnd(){s=(s*1664525+1013904223)>>>0;return s/4294967296}
  function freeAt(x,z,m){for(var k=0;k<B.length;k++){var b=B[k];if(x>b.x0-m&&x<b.x1+m&&z>b.z0-m&&z<b.z1+m)return false}return true}
  function nearRoad(v){for(var i=0;i<ROADS.length;i++){if(Math.abs(v-ROADS[i])<RW+1.5)return true}return false}
@@ -370,7 +399,7 @@ function buildTeams(){
 function enemyNear(a,x,z,r){for(var i=0;i<actors.length;i++){var e=actors[i];if(e.team===a.team||!e.alive)continue;if(Math.hypot(e.x-x,e.z-z)<r)return true}return false}
 function spawnActor(a){
  var side=a.team===0?1:-1,x=0,z=0;
- for(var k=0;k<8;k++){x=rnd(-45,45);z=side*rnd(HALF-15,HALF-4);if(!enemyNear(a,x,z,30))break}
+ for(var k=0;k<8;k++){x=rnd(-16,16);z=side*rnd(26,38);if(!enemyNear(a,x,z,30))break}
  a.x=x;a.z=z;a.y=0;a.vy=0;a.hp=100;a.alive=true;a.invuln=time+2.5;a.ammo=GUNS[a.wi].mag;if(a.isPlayer)for(var gi=0;gi<GUNS.length;gi++)a.mags[gi]=GUNS[gi].mag;a.reloadT=0;a.yaw=side>0?0:Math.PI;a.pitch=0;a.vx=x;a.vz=z;a.vyaw=a.yaw;a.flashT=0;
  a.target=null;a.sees=false;a.alert=null;a.node=-1;a.burst=0;a.burstPause=0;a.lastHurt=-99;
  if(a.mesh)a.mesh.group.visible=true;
@@ -378,7 +407,7 @@ function spawnActor(a){
 
 /* ---------- navigation graph (road crossings) ---------- */
 var NODES=[];
-(function(){for(var i=0;i<5;i++)for(var j=0;j<5;j++)NODES.push({x:ROADS[i],z:ROADS[j],nb:[],skip:(i===2&&j===2)});
+(function(){for(var i=0;i<5;i++)for(var j=0;j<5;j++)NODES.push({x:XN[i],z:ROADS[j],nb:[],skip:(i===2&&j===2)});
  for(var i2=0;i2<5;i2++)for(var j2=0;j2<5;j2++){var n=NODES[i2*5+j2];if(n.skip)continue;
   [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var a=i2+d[0],b=j2+d[1];if(a<0||b<0||a>4||b>4)return;var m=NODES[a*5+b];if(!m.skip)n.nb.push(a*5+b)})}})();
 function nearestNode(x,z){var best=-1,bd=1e9;for(var i=0;i<NODES.length;i++){if(NODES[i].skip)continue;var d=Math.hypot(NODES[i].x-x,NODES[i].z-z);if(d<bd){bd=d;best=i}}return best}
@@ -972,11 +1001,12 @@ function step(dt){
 }
 function loop(now){
  requestAnimationFrame(loop);
+ document.body.classList.toggle('inmenu',state==='menu'||!me);
  var dt=Math.min(0.05,Math.max(0.001,((now-lastT)/1000)||0.016));lastT=now;
  if(state==='menu'||!me){
   time+=dt;var an=time*0.06;
-  if(camFov!==75){camFov=75;camera.fov=75;camera.updateProjectionMatrix()}
-  camera.position.set(Math.sin(an)*95,42,Math.cos(an)*95);camera.lookAt(0,12,0);vm.visible=false;
+  if(camFov!==38){camFov=38;camera.fov=38;camera.updateProjectionMatrix()}
+  lobbyFrame(dt);vm.visible=false;
   renderer.render(scene,camera);return;
  }
  if(paused&&net.role==='off'){renderView(0);renderer.render(scene,camera);return}
@@ -986,6 +1016,24 @@ function loop(now){
  renderer.render(scene,camera);
 }
 
+/* ---------- lobby scene (soldier on a stage, like other FPS lobbies) ---------- */
+var lobbyG=null,lobbyM=null,lobbyStamp=-1,GSTAMP=0;
+function lobbyInit(){
+ lobbyG=new THREE.Group();lobbyG.position.set(300,0,0);scene.add(lobbyG);
+ var fl=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.7,0.18,40),new THREE.MeshLambertMaterial({color:0x14263c,emissive:0x0a1626}));fl.position.y=-0.09;lobbyG.add(fl);
+ var r1=new THREE.Mesh(new THREE.TorusGeometry(1.52,0.025,8,64),new THREE.MeshBasicMaterial({color:0x56e6ff}));r1.rotation.x=Math.PI/2;r1.position.y=0.01;lobbyG.add(r1);
+ var r2=new THREE.Mesh(new THREE.TorusGeometry(1.75,0.02,8,64),new THREE.MeshBasicMaterial({color:0x2a7fb8}));r2.rotation.x=Math.PI/2;r2.position.y=0.0;lobbyG.add(r2);
+ lobbyM=makeBotMesh(0);lobbyG.add(lobbyM.group);
+ var back=new THREE.Mesh(new THREE.PlaneGeometry(40,22),new THREE.MeshBasicMaterial({color:0x07101e}));back.position.set(300,8,-8);scene.add(back);
+ for(var i=-3;i<=3;i++){var p=new THREE.Mesh(new THREE.PlaneGeometry(0.3,9),new THREE.MeshBasicMaterial({color:i%2?0x123b58:0x0e2a45}));p.position.set(300+i*2.6,4.5,-7.9);scene.add(p)}
+}
+function lobbyFrame(dt){
+ if(!lobbyG)lobbyInit();
+ if(lobbyM.gunId!==startWi||lobbyStamp!==GSTAMP){lobbyM.gunId=-1;setBotGun(lobbyM,startWi);lobbyStamp=GSTAMP}
+ lobbyG.rotation.y=Math.sin(time*0.35)*0.55;
+ lobbyM.upper.position.y=Math.sin(time*1.8)*0.012;
+ camera.position.set(300.95,1.3,4.2);camera.lookAt(300.95,1.0,0);
+}
 /* ---------- menu wiring ---------- */
 /* ---------- icons (no text on buttons), loadout, modes ---------- */
 var SV=function(b,v){return '<svg viewBox="'+(v||'0 0 24 24')+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+b+'</svg>'};
@@ -1066,7 +1114,7 @@ $('againBtn').addEventListener('click',function(){
 });
 document.addEventListener('visibilitychange',function(){if(document.hidden&&state==='playing')pauseGame()});
 if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0){navigator.serviceWorker.register('sw.js').catch(function(){})}
-loadGunModels();planSnow();loadSnow();
+loadGunModels();planSnow();loadSnow();loadSnowMap();
 state='menu';
 requestAnimationFrame(loop);
 })();

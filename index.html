@@ -80,9 +80,34 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}th,td{pa
 #scope:before{content:"";position:absolute;left:50%;top:50%;width:60vh;height:2px;margin-left:-30vh;background:#000}
 #scope:after{content:"";position:absolute;left:50%;top:50%;height:60vh;width:2px;margin-top:-30vh;background:#000}
 #bSwap{right:195px;bottom:112px;width:52px;height:52px}
+
+/* ---------- lobby (FPS style) ---------- */
+body.inmenu .hud,body.inmenu #mini,body.inmenu #wbar,body.inmenu #btns,body.inmenu #pauseBtn,body.inmenu #joyzone,body.inmenu #lookzone{display:none!important}
+#menu{background:none;backdrop-filter:none;pointer-events:none}
+#menu .card{display:contents}
+#menu .logo{position:fixed;left:max(16px,env(safe-area-inset-left));top:8px;font-size:22px;letter-spacing:3px;pointer-events:none}
+#menu .sub,#menu .help{display:none}
+#menu #helpPC{display:block;position:fixed;left:16px;bottom:8px;font-size:11px;margin:0;max-width:46vw;pointer-events:none;opacity:.7}
+#menu #name{position:fixed;left:16px;top:44px;width:170px;margin:0;padding:8px 12px;font-size:14px;font-weight:800;border-radius:10px;background:#0a1a2dcc;border-color:#2b5d86;pointer-events:auto}
+#menu #modeRow{position:fixed;left:16px;top:92px;flex-direction:column;gap:6px;width:92px;margin:0;pointer-events:auto}
+#menu #modeRow .opt{padding:6px 4px;border-radius:12px;background:#0a1a2dcc;border:1px solid #2b5d86}
+#menu #modeRow .opt.sel{background:#124a78;border-color:#7be8ff;box-shadow:0 0 14px #19b6ff77}
+#menu #diffRow,#menu #qualRow{position:fixed;right:max(16px,env(safe-area-inset-right));margin:0;width:128px;pointer-events:auto}
+#menu #diffRow{top:10px}#menu #qualRow{top:58px}
+#menu #diffRow .opt,#menu #qualRow .opt{padding:6px;background:#0a1a2dcc}
+#menu #diffRow .opt.sel,#menu #qualRow .opt.sel,#menu #gunRow .opt.sel{background:#16a9e8;border-color:#7be8ff}
+#menu #gunRow{position:fixed;left:50%;bottom:46px;transform:translateX(-50%);width:min(520px,56vw);margin:0;gap:6px;pointer-events:auto}
+#menu #gunRow .opt{padding:8px 4px;border-radius:12px;background:#0a1a2dcc;border:1px solid #2b5d86}
+#menu #gunRow .opt svg{max-width:80px;height:24px}
+#menu #mainBtns{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:min(300px,34vw);pointer-events:auto}
+#menu #startBtn{height:64px;border-radius:16px;background:linear-gradient(180deg,#ffd84a,#ff9a1f);color:#2a1500;box-shadow:0 0 26px #ffb02e88;margin-top:0}
+#menu #startBtn svg{width:40px;height:40px}
+#menu #hostBtn{margin-top:8px;padding:10px}
+#menu #lobby{position:fixed;right:max(16px,env(safe-area-inset-right));top:110px;width:min(280px,34vw);padding:14px;border-radius:16px;background:#081426e6;border:1px solid #315779;text-align:center;pointer-events:auto}
+#menu #status{position:fixed;left:50%;top:10px;transform:translateX(-50%);margin:0;pointer-events:none;text-shadow:0 0 8px #000}
 </style>
 </head>
-<body>
+<body class="inmenu">
 <canvas id="gl"></canvas>
 <canvas id="mini" width="132" height="132"></canvas>
 <div class="hud" id="score"><div class="tm" id="sBlue">0</div><div id="timer">5:00</div><div class="tm" id="sRed">0</div></div>

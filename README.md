@@ -27,3 +27,6 @@ It is also a PWA, so it can be added to the home screen or packaged as an APK wi
 
 ## Next ideas
 More weapons, more maps, voice/text chat, and a battle-royale mode.
+
+## Snow map
+The arena is your `models/Map.glb`, scaled x8. The two long houses are drawn as simple boxes (the original is 670k triangles); the ice cliffs, trees, rocks, gates and ground are your model.
